@@ -49,12 +49,12 @@ print(result)
 # print(y_test[:50])
 # print(np.argmax(result, axis=1))
 
-# for i in range(1, 11):
-#       plt.subplot(2, 5, i)
-#       plt.imshow(x_train[i - 1])
-#       plt.text(3, 10, str(y_train[i-1]))
-#       plt.xticks([])
-#       plt.yticks([])
-# plt.show()
+for i in range(1, 11):
+      plt.subplot(2, 5, i)
+      plt.imshow(x_train[i - 1])
+      plt.text(3, 10, str(y_train[i-1]))
+      plt.xticks([])
+      plt.yticks([])
+plt.show()
 
 
