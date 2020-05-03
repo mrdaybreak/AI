@@ -14,70 +14,84 @@ def get_subway(first, second, dict_name):
         if i[0] != '':
             dict_name[i[0]] = dict_list
             dict_list = []
-    print(dict_name)
 dict_name = {}
 get_subway("ln", "n", dict_name)
-
+# print(dict_name)
 stations = re.findall('"n":"(.*?)"', r)
 positions_origin = re.findall('"p":"(.*?)"', r)
 # print(positions_origin)
 positions = [i.split() for i in positions_origin]
 positions = [[int(a[0]), int(a[1])] for a in positions]
 # print(positions)
-c = dict(zip(stations, positions))
-# print(dict(c))
+stations_info = dict(zip(stations, positions))
 
-stations_dict = defaultdict(list)
+neighbor_info = defaultdict(list)
 for i in dict_name:
     stations_list = dict_name.get(i, [])
     for i in stations_list:
         st_index = stations_list.index(i)
-        if st_index > 1:
-            if stations_list[st_index - 1] not in stations_dict[i]:
-                stations_dict[i].append(stations_list[st_index - 1])
+        if st_index > 0:
+            if stations_list[st_index - 1] not in neighbor_info[i]:
+                neighbor_info[i].append(stations_list[st_index - 1])
         if st_index < len(stations_list) - 1:
-            if stations_list[st_index + 1] not in stations_dict[i]:
-                stations_dict[i].append(stations_list[st_index + 1])
+            if stations_list[st_index + 1] not in neighbor_info[i]:
+                neighbor_info[i].append(stations_list[st_index + 1])
 # print(stations_dict)
-result = []
 
-def search_way(start, end, path):
+def search_way_BFS(start, end, path, result=[]):
     if start == end:
         path_cache = copy.deepcopy(path)
-        print('aa',path_cache)
         result.append(path_cache)
-        return True
-    if not stations_dict.get(start):
-        return False
+        # print(result)
+        return
+    if not neighbor_info.get(start):
+        return None
 
-    for item in stations_dict[start]:
+    for item in neighbor_info[start]:
+        # print(item)
+        if item in path:
+            continue
+        path.append(item)
+        if len(result) < 1:
+            # print(result)
+            search_way_BFS(item, end, path, result)
+        path.pop()
+    return result
+
+# print(search_way_BFS("霍营", '立水桥', path=['霍营']))
+
+def search_way_DFS(start, end, path, result=[]):
+    if start == end:
+        path_cache = copy.deepcopy(path)
+        result.append(path_cache)
+        # print(result)
+        return
+    if not neighbor_info.get(start):
+        return None
+
+    for item in reversed(neighbor_info[start]):
         print(item)
         if item in path:
             continue
-        if item not in path:
-            path.append(item)
-            if search_way(item, end, path):
-                return True
+        path.append(item)
+        if len(result) < 1:
+            print(result)
+            search_way_DFS(item, end, path, result)
         path.pop()
-    return False
+    return result
 
-search_way("霍营", '立水桥', path=[''])
-# print(result)
+print(search_way_DFS("沙河", '昌平', path=['沙河']))
+
 
 import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib
-nodes = []
-edges = []
-for i in stations_dict.items():
-    nodes.append(i[0])
-    for j in i[1]:
-        edges.append([i[0], j])
-graph = nx.Graph(edges)
-nlabels = dict(zip(nodes, nodes))
 matplotlib.rcParams['font.family']='sans-serif'
 matplotlib.rcParams['font.sans-serif'] = ['SimHei']
-nx.draw_networkx_nodes(graph, c, node_size=30, node_color="#6CB6FF")  # 绘制节点
-nx.draw_networkx_edges(graph, c, edges)  # 绘制边
-nx.draw_networkx_labels(graph, c, nlabels, font_size=6)
-plt.show()
+# plt.figure(figsize=(20, 20))
+# stations_graph = nx.Graph()
+# stations_graph.add_nodes_from(list(stations_info.keys()))
+stations_connection_graph = nx.Graph(neighbor_info)
+plt.figure(figsize=(30, 30))
+nx.draw(stations_connection_graph, stations_info, with_labels=True, node_size=10)
+# plt.show()
