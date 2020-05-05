@@ -16,6 +16,8 @@ print('over-fitting')
 from keras import models, layers, optimizers, datasets, utils, regularizers
 import matplotlib.pyplot as plt
 import numpy as np
+from keras.preprocessing.image import ImageDataGenerator
+from keras.callbacks import ReduceLROnPlateau
 
 (x_train, y_train), (x_test, y_test) = datasets.cifar10.load_data()
 print(x_test.shape)
@@ -29,23 +31,27 @@ print(x_test.shape)
 model = models.Sequential()
 model.add(layers.Conv2D(64, (3, 3), activation='relu', input_shape=(32, 32, 3)))
 model.add(layers.Conv2D(64, (3, 3), activation='relu', padding='same'))
-model.add(layers.MaxPooling2D((2, 2), strides=2))
+model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same'))
 model.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same'))
-model.add(layers.MaxPooling2D((2, 2), strides=2))
+model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
 model.add(layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
-model.add(layers.MaxPooling2D((2, 2), strides=2))
+model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Flatten())
 model.add(layers.Dropout(0.5))
 model.add(layers.Dense(10, activation='softmax'))
 model.summary()
-model.compile(loss='categorical_crossentropy', optimizer=optimizers.RMSprop(lr=0.0001), metrics=['accuracy'])
-x_train = x_train/255
+# cblr = ReduceLROnPlateau(verbose=1)
+model.compile(loss='categorical_crossentropy', optimizer=optimizers.Adam(lr=0.001), metrics=['accuracy'])
+train_datagen = ImageDataGenerator(rescale=1./255, rotation_range=5, width_shift_range=0.2, height_shift_range=0.2,
+                                   shear_range=0.2, zoom_range=0.2, horizontal_flip=True,)
+# x_train = x_train/255
 x_test = x_test/255
 y_train = utils.to_categorical(y_train, 10)
 y_test = utils.to_categorical(y_test, 10)
-model.fit(x_train, y_train, batch_size=200, epochs=50)
+x_train = train_datagen.flow(x_train, y_train, batch_size=256)
+model.fit_generator(x_train, steps_per_epoch=200, epochs=100)
 modelname = 'cifarfitmodel.h5'
 model.save(modelname)
 model = models.load_model('cifarfitmodel.h5')
@@ -54,7 +60,7 @@ print(scores)
 result = model.predict_classes(x_test[:50])
 print(result)
 
-# score = [1.1631775154471398, 0.8282999992370605]
+# score = [0.4623522692680359, 0.8799999952316284]
 
 
 
